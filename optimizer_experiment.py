@@ -93,3 +93,92 @@ def evaluate(weights):
     return accuracy, f1
 
 
+# 5. Initialize same starting parameters
+
+
+pnp.random.seed(42)
+
+initial_weights = pnp.array(
+    np.random.normal(
+        loc=0.0,
+        scale=0.1,
+        size=(n_layers, n_qubits, 3)
+    ),
+    requires_grad=True
+)
+
+
+
+# 6. Train using Adam
+
+
+print("\nTRAINING WITH ADAM")
+print("=" * 50)
+
+adam_weights = pnp.array(
+    initial_weights,
+    requires_grad=True
+)
+
+adam_optimizer = qml.AdamOptimizer(
+    stepsize=0.05
+)
+
+adam_history = []
+
+start = time.perf_counter()
+
+for epoch in range(epochs):
+
+    adam_weights, loss = adam_optimizer.step_and_cost(
+        loss_function,
+        adam_weights
+    )
+
+    adam_history.append(float(loss))
+
+    if (epoch + 1) % 10 == 0:
+        print(
+            f"Epoch {epoch + 1}: Loss = {float(loss):.6f}"
+        )
+
+adam_time = time.perf_counter() - start
+
+adam_accuracy, adam_f1 = evaluate(adam_weights)
+
+
+
+# 7. Estimate an average metric tensor
+
+
+print("\nCALCULATING QUANTUM METRIC TENSOR")
+
+metric_fn = qml.metric_tensor(quantum_circuit)
+
+# Use 10 evenly spaced training samples
+sample_indices = np.linspace(
+    0,
+    len(X_train) - 1,
+    10,
+    dtype=int
+)
+
+metric_tensors = []
+
+for index in sample_indices:
+
+    metric = metric_fn(
+        X_train[index],
+        initial_weights
+    )
+
+    metric_tensors.append(metric)
+
+average_metric = pnp.mean(
+    pnp.stack(metric_tensors),
+    axis=0
+)
+
+print("Average metric tensor calculated.")
+
+
