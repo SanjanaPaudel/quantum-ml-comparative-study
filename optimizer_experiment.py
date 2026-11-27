@@ -182,3 +182,119 @@ average_metric = pnp.mean(
 print("Average metric tensor calculated.")
 
 
+     
+# 8. Train using QNG
+     
+
+print("\nTRAINING WITH QUANTUM NATURAL GRADIENT")
+print("=" * 50)
+
+qng_weights = pnp.array(
+    initial_weights,
+    requires_grad=True
+)
+
+qng_optimizer = qml.QNGOptimizer(
+    stepsize=0.01,
+    lam=0.001
+)
+
+qng_history = []
+
+def metric_tensor_function(weights):
+    return average_metric
+
+start = time.perf_counter()
+
+for epoch in range(epochs):
+
+    qng_weights, loss = qng_optimizer.step_and_cost(
+        loss_function,
+        qng_weights,
+        metric_tensor_fn=metric_tensor_function
+    )
+
+    qng_history.append(float(loss))
+
+    if (epoch + 1) % 10 == 0:
+        print(
+            f"Epoch {epoch + 1}: Loss = {float(loss):.6f}"
+        )
+
+qng_time = time.perf_counter() - start
+
+qng_accuracy, qng_f1 = evaluate(qng_weights)
+
+
+     
+# 9. Compare both optimizers
+     
+
+results = pd.DataFrame([
+    {
+        "Optimizer": "Adam",
+        "Accuracy": adam_accuracy,
+        "F1 Score": adam_f1,
+        "Final Loss": adam_history[-1],
+        "Training Time (seconds)": adam_time
+    },
+    {
+        "Optimizer": "Quantum Natural Gradient",
+        "Accuracy": qng_accuracy,
+        "F1 Score": qng_f1,
+        "Final Loss": qng_history[-1],
+        "Training Time (seconds)": qng_time
+    }
+])
+
+os.makedirs("results", exist_ok=True)
+os.makedirs("plots", exist_ok=True)
+
+results.to_csv(
+    "results/optimizer_comparison.csv",
+    index=False
+)
+
+print("\nOPTIMIZER COMPARISON")
+print("=" * 75)
+print(results.to_string(index=False))
+
+
+     
+# 10. Plot training loss
+     
+
+plt.figure(figsize=(9, 5))
+
+plt.plot(
+    range(1, epochs + 1),
+    adam_history,
+    label="Adam"
+)
+
+plt.plot(
+    range(1, epochs + 1),
+    qng_history,
+    label="Quantum Natural Gradient"
+)
+
+plt.title("Adam vs Quantum Natural Gradient")
+plt.xlabel("Epoch")
+plt.ylabel("Mean Squared Error Loss")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+
+plt.savefig(
+    "plots/optimizer_training_comparison.png",
+    dpi=300
+)
+
+plt.show()
+
+
+print("\nOptimizer experiment completed successfully!")
+print("results/optimizer_comparison.csv")
+print("plots/optimizer_training_comparison.png")
+
+
