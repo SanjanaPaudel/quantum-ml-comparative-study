@@ -1,0 +1,3 @@
+Optimizer,Accuracy,F1 Score,Final Loss,Training Time (seconds)
+Adam,1.0,1.0,0.026346269111154084,40.01923249999527
+Quantum Natural Gradient,1.0,1.0,0.059048543880537215,34.95529539999552

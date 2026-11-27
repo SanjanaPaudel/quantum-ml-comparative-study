@@ -25,7 +25,7 @@ n_qubits = 2
 n_layers = 2
 epochs = 50
 
-dev = qml.device("default.qubit", wires=n_qubits)
+dev = qml.device("default.qubit", wires=n_qubits + 1)
 
 
 # 2. Define quantum circuit
@@ -96,7 +96,7 @@ def evaluate(weights):
 # 5. Initialize same starting parameters
 
 
-pnp.random.seed(42)
+pnp.random.seed(21)
 
 initial_weights = pnp.array(
     np.random.normal(
